@@ -1,7 +1,11 @@
+#!/usr/bin/env python 
+
+# External imports
 import enum
 import re
 
-from .resources import *
+# Local imports
+import resources
 
 class Event:
     def __init__(self, match):

@@ -1,7 +1,11 @@
+#!/usr/bin/env python 
+
+# External imports
 import enum
 
-from .exceptions import *
-from .resources import *
+# Local imports
+import exceptions
+from resources import *
 
 class CardType(enum.Enum):
     EVENT = enum.auto()

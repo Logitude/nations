@@ -1,8 +1,12 @@
-from .exceptions import *
-from .cards import *
-from .resources import *
-from .phases import *
-from .actions import *
+#!/usr/bin/env python 
+
+# Local imports
+
+from exceptions import *
+from cards import *
+from resources import *
+from phases import *
+from actions import *
 
 def s_if_not_1(value):
     return 's' if value != 1 else ''

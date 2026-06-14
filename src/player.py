@@ -1,7 +1,10 @@
-from .exceptions import *
-from .resources import *
-from .actions import *
-from . import nations
+#!/usr/bin/env python 
+
+# Local imports
+from exceptions import *
+from resources import *
+from actions import *
+import nations
 
 def s_if_not_1(value):
     return 's' if value != 1 else ''

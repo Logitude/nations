@@ -1,15 +1,16 @@
 import os
 import random
 
-from .exceptions import *
-from .phases import *
-from .resources import *
-from .cards import *
-from . import events
-from . import event_cards
-from . import progress_cards
-from . import nations
-from .player import Player
+# Local imports
+import events
+import event_cards
+import progress_cards
+import nations
+from exceptions import *
+from phases import *
+from resources import *
+from cards import *
+from player import Player
 
 ordinals = ('0th', '1st', '2nd', '3rd', '4th', '5th', '6th')
 

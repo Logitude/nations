@@ -1,8 +1,12 @@
+#!/usr/bin/env python 
+
+# External imports
 import collections
 
-from .cards import *
-from .resources import *
-from .actions import *
+# Local imports
+from cards import *
+from resources import *
+from actions import *
 
 def s_if_not_1(value):
     return 's' if value != 1 else ''

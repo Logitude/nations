@@ -1,6 +1,9 @@
-from .resources import *
-from .cards import *
-from .actions import *
+#!/usr/bin/env python 
+
+# Local imports
+from resources import *
+from cards import *
+from actions import *
 
 class DynastyCard(Card):
     card_type = CardType.DYNASTY

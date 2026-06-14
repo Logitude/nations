@@ -1,9 +1,13 @@
+#!/usr/bin/env python 
+
+# External imports
 import argparse
 import os
 import pathlib
 import json
 
-from . import *
+# Local imports
+import cli
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument('--seed')

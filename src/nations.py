@@ -1,8 +1,11 @@
-from .exceptions import *
-from .cards import *
-from .resources import *
-from .progress_cards import *
-from .dynasty_cards import *
+#!/usr/bin/env python 
+
+# Local imports
+from exceptions import *
+from cards import *
+from resources import *
+from progress_cards import *
+from dynasty_cards import *
 
 def s_if_not_1(value):
     return 's' if value != 1 else ''
