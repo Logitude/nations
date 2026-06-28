@@ -2286,20 +2286,17 @@ class Alhazen(Age2Advisor):
             for (col, card) in enumerate(cards_in_row):
                 if card is not None:
                     options.append(f'P{row + 1}{col + 1}')
-        choice1 = self.match.get_move(player, 'Swap which card?', options)
+        if len(options) == 2:
+            (choice1, choice2) = options
+        else:
+            choice1 = self.match.get_move(player, 'Swap which card?', options)
+            choice2 = self.match.get_move(player, 'With which card?', [option for option in options if option is not choice1])
         row1 = int(choice1[1]) - 1
         col1 = int(choice1[2]) - 1
         card1 = self.match.progress_board[row1][col1]
-        if card1 is None:
-            raise InvalidMove('Must be a card there.')
-        choice2 = self.match.get_move(player, 'With which card?', [card2 for card2 in options if card2 is not card1])
         row2 = int(choice2[1]) - 1
         col2 = int(choice2[2]) - 1
         card2 = self.match.progress_board[row2][col2]
-        if card2 is None:
-            raise InvalidMove('Must be a card there.')
-        if choice1 == choice2:
-            raise InvalidMove('Must swap two different cards.')
         self.match.log(f'[{self}] {player} swaps "{card1}" with "{card2}".')
         self.match.progress_board[row1][col1] = card2
         self.match.progress_board[row2][col2] = card1
