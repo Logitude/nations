@@ -1172,4 +1172,5 @@ class Player:
         s['passed_last'] = int(self.passed_last)
         s['bought_colony'] = int(self.bought_colony_this_round)
         s['score'] = self.score(projected=True)
+        s['resource_remainder'] = self.resource_remainder()
         return s
