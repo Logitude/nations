@@ -954,14 +954,18 @@ class CropRotationMercantilism(Age3EventCard):
             if not possible_undeploys:
                 self.match.log(f'{player} has no building [Workers].')
             else:
+                undeployed = False
                 while possible_undeploys:
                     undeploy = self.match.get_move(player, 'Undeploy a building [Worker]?', possible_undeploys + ['Done'])
                     if undeploy == 'Done':
                         break
+                    undeployed = True
                     player.undeploy_action(undeploy)
                     self.match.log(f'{player} gains 2 [Stone].')
                     player.resources[Resource.STONE] += 2
                     possible_undeploys = building_undeploys(player)
+                if not undeployed:
+                    self.match.log(f'{player} declines.')
                 self.match.get_move(player, 'Confirm?', ('Confirm',))
 
 class JanissariesCouncilOfTrent(Age3EventCard):
