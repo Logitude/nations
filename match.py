@@ -194,7 +194,7 @@ class Match:
                 self.seed = bytes().fromhex('0' + seed)
             else:
                 self.seed = bytes().fromhex(seed)
-        self.events = {event.name: event(self) for event in events.events}
+        self.events = events.Events(self)
         self.players = [Player(self, name) for name in player_names]
         for player in self.players:
             if player.name not in player_growth_resources:
@@ -336,7 +336,7 @@ class Match:
             amount = player.resources[resource]
             if resource is Resource.STABILITY:
                 amount = min(15, amount)
-                if any(self.events['force least stability'].happen(player)):
+                if any(self.events.happen('force least stability', player)):
                     amount = -1
             elif resource is Resource.MILITARY:
                 amount = min(40, amount)
@@ -345,7 +345,7 @@ class Match:
 
     def update_most_least_stability_military(self):
         for player in self.players[::-1]:
-            self.events['updating most least stability military'].happen(player)
+            self.events.happen('updating most least stability military', player)
         (most_stability, least_stability) = self.most_least_of_resource(Resource.STABILITY)
         (most_military, least_military) = self.most_least_of_resource(Resource.MILITARY)
         for player in self.players:
@@ -355,9 +355,9 @@ class Match:
             player.least_military = player in least_military
         for player in self.players[::-1]:
             if player.least_stability:
-                self.events['least stability'].happen(player)
+                self.events.happen('least stability', player)
             if player.least_military:
-                self.events['least military'].happen(player)
+                self.events.happen('least military', player)
 
     def most_stability(self):
         most = []
@@ -438,7 +438,7 @@ class Match:
     def progress_phase(self):
         self.phase = Phase.PROGRESS
         for player in self.players[::-1]:
-            self.events['before progress'].happen(player)
+            self.events.happen('before progress', player)
         remaining_cards = [card for card in self.progress_board[2] if card is not None]
         self.progress_board = [[None for j in range(len(self.players) + 2)] for i in range(3)]
         self.progress_board[0][:len(remaining_cards)] = remaining_cards
@@ -500,7 +500,7 @@ class Match:
         top_event = self.event_cards[age][0]
         next_event = self.event_cards[age][1]
         for player in self.players[::-1]:
-            self.events['choose event card'].happen(player, events=(top_event, next_event))
+            self.events.happen('choose event card', player, events=(top_event, next_event))
         if self.event is None:
             self.event = top_event
             del self.event_cards[age][:1]
@@ -512,7 +512,7 @@ class Match:
         self.architects += self.event.architects
         self.turmoil = self.architects
         for player in self.players[::-1]:
-            self.events['after event reveal'].happen(player)
+            self.events.happen('after event reveal', player)
 
     def maintenance_phase(self):
         self.architects = 0
@@ -543,7 +543,7 @@ class Match:
     def action_phase(self):
         self.phase = Phase.ACTION
         for player in self.players[::-1]:
-            self.events['take extra first action'].happen(player)
+            self.events.happen('take extra first action', player)
         current_player = self.players[0]
         while True:
             current_player.take_turn()
@@ -560,7 +560,7 @@ class Match:
             if current_player.passed:
                 break
             for player in players_passed_over:
-                self.events['passed over'].happen(player)
+                self.events.happen('passed over', player)
 
     def production_phase(self):
         self.log('Production:')
@@ -568,19 +568,19 @@ class Match:
         for player in self.players[::-1]:
             player.produce()
         for player in self.players:
-            self.events['after production'].happen(player)
+            self.events.happen('after production', player)
 
     def player_order_phase(self):
         self.phase = Phase.PLAYER_ORDER
-        if any(self.events['skip player order'].happen(None)):
+        if any(self.events.happen('skip player order', None)):
             self.log('No change in player order.')
             return
         current_player_order = self.players[:]
         def sort_key(player):
             military = min(40, player.resources[Resource.MILITARY])
-            military += self.events['extra player order military'].happen(player)
+            military += self.events.happen('extra player order military', player)
             stability = max(-1, min(15, player.resources[Resource.STABILITY]))
-            if any(self.events['force least stability'].happen(player)):
+            if any(self.events.happen('force least stability', player)):
                 stability = -1
             return (-military, -stability, current_player_order.index(player))
         self.players.sort(key=sort_key)
@@ -591,9 +591,9 @@ class Match:
         self.log('War:')
         self.phase = Phase.WAR
         if self.war is not None:
-            amount = self.war.penalty_amount - self.events['extra war penalty'].happen(None)
+            amount = self.war.penalty_amount - self.events.happen('extra war penalty', None)
             war_penalty = Resources({self.war.penalty_resource: amount})
-            war_penalty[Resource.FOOD] -= self.events['extra war food penalty'].happen(None)
+            war_penalty[Resource.FOOD] -= self.events.happen('extra war food penalty', None)
             self.log(f'[{self.war}] The war value is {self.war_value} and the penalty is {war_penalty}.')
             any_defeated = False
             for player in self.players[::-1]:
@@ -645,11 +645,11 @@ class Match:
         if end_of_age:
             self.score_books()
         for player in self.players[::-1]:
-            self.events['end of round'].happen(player)
+            self.events.happen('end of round', player)
         self.update_most_least_stability_military()
         if end_of_age:
             for player in self.players[::-1]:
-                self.events['end of age'].happen(player)
+                self.events.happen('end of age', player)
             self.update_most_least_stability_military()
         if self.round_number == 8:
             self.scoring()

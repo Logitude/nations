@@ -55,7 +55,7 @@ class EventCard(Card):
             amount = max(-1, player.resources[resource])
             if resource is Resource.STABILITY:
                 amount = min(15, amount)
-                if any(self.match.events['force least stability'].happen(player)):
+                if any(self.match.events.happen('force least stability', player)):
                     amount = -1
             elif resource is Resource.MILITARY:
                 amount = min(40, amount)
@@ -609,7 +609,7 @@ class FourthCrusadeSongResistance(Age2EventCard):
                     choosing_player.resources[Resource.GOLD] -= 3
                     choosing_player.points += 1
                     if choosing_player.resources[Resource.GOLD] == 0:
-                        self.match.events['spent last gold'].happen(choosing_player)
+                        self.match.events.happen('spent last gold', choosing_player)
                     self.match.log('Least military will lose 4 [Books].')
                 else:
                     self.match.log(f'{choosing_player} declines.')
@@ -626,7 +626,7 @@ class FourthCrusadeSongResistance(Age2EventCard):
                             player.resources[Resource.GOLD] -= 3
                             player.points += 1
                             if player.resources[Resource.GOLD] == 0:
-                                self.match.events['spent last gold'].happen(player)
+                                self.match.events.happen('spent last gold', player)
                         else:
                             self.match.log(f'{player} declines.')
                         self.match.get_move(player, 'Confirm?', ('Confirm',))

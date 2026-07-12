@@ -18,18 +18,6 @@ args = arg_parser.parse_args()
 
 seed = args.seed
 
-if args.replay_out is not None:
-    replay_out_path = pathlib.Path(args.replay_out)
-    os.makedirs(replay_out_path.parent, exist_ok=True)
-
-if args.log is not None:
-    log_path = pathlib.Path(args.log)
-    os.makedirs(log_path.parent, exist_ok=True)
-
-if args.state is not None:
-    state_path = pathlib.Path(args.state)
-    os.makedirs(state_path.parent, exist_ok=True)
-
 replay = None
 if args.replay is not None:
     with open(args.replay) as replay_file:
@@ -54,16 +42,26 @@ except Exception as e:
     exception = e
 
 if args.replay_out is not None:
+    replay_out_path = pathlib.Path(args.replay_out)
+    os.makedirs(replay_out_path.parent, exist_ok=True)
     with open(replay_out_path, 'w') as replay_out_file:
         replay_out_file.write(interface.get_replay())
 
 if args.log is not None:
+    log_path = pathlib.Path(args.log)
+    os.makedirs(log_path.parent, exist_ok=True)
     with open(log_path, 'w') as log_file:
         log_file.write(interface.get_log())
 
 if args.state is not None:
+    state_path = pathlib.Path(args.state)
+    os.makedirs(state_path.parent, exist_ok=True)
     with open(state_path, 'w') as state_file:
         json.dump(interface.get_state(), state_file, indent=4)
 
 if exception is not None:
-    raise exception
+    import traceback
+    try:
+        raise exception
+    except Exception:
+        traceback.print_exc()

@@ -50,11 +50,11 @@ class Card:
 
     def register_for_event(self, name, condition, event):
         self.registered_events.append(name)
-        self.match.events[name].register(self, condition, event)
+        self.match.events.register(name, self, condition, event)
 
     def unregister_for_event(self, name):
         self.registered_events.remove(name)
-        self.match.events[name].unregister(self)
+        self.match.events.unregister(name, self)
 
     def unregister_all_events(self):
         self.global_effect = False

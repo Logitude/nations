@@ -52,21 +52,21 @@ class Military(BuildingMilitary):
         if self.max_workers and self.deployed_workers >= len(self.worker_points):
             raise InvalidMove(f'"{self}" already has the maximum number of [Workers].')
         self.deployed_workers += 1
-        if any(self.match.events['no military upkeep'].happen(self.owner)):
+        if any(self.match.events.happen('no military upkeep', self.owner)):
             self.owner.resources += self.production_per_worker.immediate().positive()
         else:
             self.owner.resources += self.production_per_worker.immediate()
 
     def undeploy(self):
         self.deployed_workers -= 1
-        if any(self.match.events['no military upkeep'].happen(self.owner)):
+        if any(self.match.events.happen('no military upkeep', self.owner)):
             self.owner.resources -= self.production_per_worker.immediate().positive()
         else:
             self.owner.resources -= self.production_per_worker.immediate()
 
     def produce(self, projected=False):
         production = self.deployed_workers * self.production_per_worker.production()
-        if any(self.match.events['no military upkeep'].happen(self.owner)):
+        if any(self.match.events.happen('no military upkeep', self.owner)):
             return production.positive()
         return production
 
@@ -1625,7 +1625,7 @@ class PiazzaSanMarco(Age2Wonder):
         player.resources[Resource.GOLD] -= 2
         player.resources += choice
         if player.resources[Resource.GOLD] == 0:
-            self.match.events['spent last gold'].happen(player)
+            self.match.events.happen('spent last gold', player)
 
 class PorcelainTower(Age2Wonder):
     """This wonder space may be used for an Advisor"""

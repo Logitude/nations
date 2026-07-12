@@ -265,7 +265,6 @@ class NationsCLI:
             pass
         except Exception as e:
             exception = e
-        self.match.scoring()
         if exception is not None:
             raise exception
 

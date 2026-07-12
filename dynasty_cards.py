@@ -445,7 +445,7 @@ class JoseonKingdom(DynastyCard):
         player.resources -= choice
         self.resources = choice
         if had_gold and player.resources[Resource.GOLD] == 0:
-            self.match.events['spent last gold'].happen(player)
+            self.match.events.happen('spent last gold', player)
 
     def state(self):
         s = super().state()
@@ -487,7 +487,7 @@ class MaliEmpire(DynastyCard):
         player.resources += Resources({Resource.GOLD: -2, Resource.BOOKS: 3})
         player.points += 1
         if player.resources[Resource.GOLD] == 0:
-            self.match.events['spent last gold'].happen(player)
+            self.match.events.happen('spent last gold', player)
         player.remove(card)
 
 class SonghaiEmpire(DynastyCard):
@@ -606,7 +606,7 @@ class JagellonianDynasty(DynastyCard):
             payee.resources[Resource.GOLD] += 1
             self.paid = True
             if player.resources[Resource.GOLD] == 0:
-                self.match.events['spent last gold'].happen(player)
+                self.match.events.happen('spent last gold', player)
         else:
             self.match.log(f'[{self}] {player} declines.')
         self.match.get_move(player, 'Confirm?', ('Confirm',))
@@ -688,19 +688,19 @@ class KingdomOfLeon(DynastyCard):
         player.do_battle(allow_no_raid=True)
         card = kwargs['card']
         card.progress_card_type = ProgressCardType.BATTLE
-        self.match.events['buying card'].happen(player, card=card)
+        self.match.events.happen('buying card', player, card=card)
         card.progress_card_type = ProgressCardType.WAR
 
     def effect_of_bought_battle(self, player, **kwargs):
         card = kwargs['card']
         card.progress_card_type = ProgressCardType.BATTLE
-        self.match.events['bought card'].happen(player, card=card)
+        self.match.events.happen('bought card', player, card=card)
         card.progress_card_type = ProgressCardType.WAR
 
     def effect_of_after_bought_battle(self, player, **kwargs):
         card = kwargs['card']
         card.progress_card_type = ProgressCardType.BATTLE
-        self.match.events['after bought card'].happen(player, card=card)
+        self.match.events.happen('after bought card', player, card=card)
         card.progress_card_type = ProgressCardType.WAR
 
 class PortugeseEmpire(DynastyCard):

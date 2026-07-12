@@ -198,7 +198,7 @@ class Player:
                 raid_values.append(card.raid_value)
         base_raid_value = max(raid_values)
         if base_raid_value > 0:
-            return base_raid_value + self.match.events['extra raid value'].happen(self)
+            return base_raid_value + self.match.events.happen('extra raid value', self)
         return 0
 
     def golden_age_bonus(self):
@@ -227,7 +227,7 @@ class Player:
         growth_options_with_extra_resources = {}
         for resource_type in (Resource.FOOD, Resource.STONE, Resource.GOLD):
             growth_option = Resources({resource_type: self.growth_resources})
-            extra_resources = self.match.events['extra growth resources'].happen(self, growth=growth_option)
+            extra_resources = self.match.events.happen('extra growth resources', self, growth=growth_option)
             if extra_resources:
                 growth_options_with_extra_resources[resource_type] = growth_option
             growth_option[resource_type] += extra_resources
@@ -250,11 +250,11 @@ class Player:
                         self.workers += 1
                         self.grown_workers += 1
                         break
-            self.match.events['take worker'].happen(self, growth=True)
+            self.match.events.happen('take worker', self, growth=True)
         else:
             for (resource_type, growth_option) in growth_options_with_extra_resources.items():
                 if growth_chosen[resource_type]:
-                    self.match.events['received extra growth resources'].happen(self, growth=growth_option)
+                    self.match.events.happen('received extra growth resources', self, growth=growth_option)
             self.match.log(f'{self} chooses to take {growth_chosen} for growth.')
             self.resources += growth_chosen
         self.match.get_move(self, 'Confirm?', ('Confirm',))
@@ -262,22 +262,22 @@ class Player:
     def can_buy_card(self, card, row, free=False):
         if not free:
             price = row
-            price += self.match.events['extra card cost'].happen(self, card=card, check=True)
-            price = self.match.events['card discount'].happen(self, card=card, row=row, cost=price, check=True)
-            extra_payment = self.match.events['extra payment'].happen(self, card=card, check=True)
+            price += self.match.events.happen('extra card cost', self, card=card, check=True)
+            price = self.match.events.happen('card discount', self, card=card, row=row, cost=price, check=True)
+            extra_payment = self.match.events.happen('extra payment', self, card=card, check=True)
             if self.resources[Resource.GOLD] < price + extra_payment:
                 return False
-        if any(self.match.events['may not buy card'].happen(self, card=card, check=True)):
+        if any(self.match.events.happen('may not buy card', self, card=card, check=True)):
             return False
         if card.is_colony():
-            military_requirement = card.military_requirement + self.match.events['extra colony military requirement'].happen(self, check=True)
-            military_requirement = self.match.events['colony discount'].happen(self, cost=military_requirement, check=True)
+            military_requirement = card.military_requirement + self.match.events.happen('extra colony military requirement', self, check=True)
+            military_requirement = self.match.events.happen('colony discount', self, cost=military_requirement, check=True)
             if self.resources[Resource.MILITARY] < military_requirement:
                 return False
         elif card.is_natural_wonder():
             if not card.buying(self, check=True):
                 return False
-            wonder_spaces_needed = 1 + self.match.events['extra wonder space'].happen(self, card=card, check=True)
+            wonder_spaces_needed = 1 + self.match.events.happen('extra wonder space', self, card=card, check=True)
             if wonder_spaces_needed > self.replaceable_wonder_spaces():
                 return False
         elif card.is_war():
@@ -295,7 +295,7 @@ class Player:
             for (col, card) in enumerate(cards_in_row):
                 if card is not None and self.can_buy_card(card, row + 1, free=free):
                     possible_buys.append(BuyAction(row, col, card))
-        for (player, card) in [additional_buy for additional_buys in self.match.events['additional buys'].happen(self) for additional_buy in additional_buys]:
+        for (player, card) in [additional_buy for additional_buys in self.match.events.happen('additional buys', self) for additional_buy in additional_buys]:
             possible_buys.append(BuyAction(-1, -1, card, player=player))
         return possible_buys
 
@@ -305,7 +305,7 @@ class Player:
         if free:
             return True
         cost = -card.deployment_cost
-        cost = self.match.events['deploy discount'].happen(self, card=card, cost=cost, check=True)
+        cost = self.match.events.happen('deploy discount', self, card=card, cost=cost, check=True)
         return self.resources[Resource.STONE] >= cost
 
     def deploy_actions(self, free=False):
@@ -331,7 +331,7 @@ class Player:
             if card is not None and card.is_wonder():
                 if self.replaceable_wonder_spaces() or card.completed_stages + 1 < len(card.stage_costs):
                     cost = -card.stage_costs[card.completed_stages]
-                    cost = self.match.events['hire discount'].happen(self, cost=cost, check=True)
+                    cost = self.match.events.happen('hire discount', self, cost=cost, check=True)
                     if self.resources[Resource.STONE] >= cost:
                         if self.match.architects:
                             possible_hires.append(HireAction(card))
@@ -367,7 +367,7 @@ class Player:
                     slots.append(f'BM{i + 1}')
         elif card.is_colony():
             self.bought_colony_this_round = True
-            if any(self.match.events['colonies on wonder spaces'].happen(self)):
+            if any(self.match.events.happen('colonies on wonder spaces', self)):
                 for (i, old_card) in enumerate(self.colonies):
                     if old_card is None or old_card.is_colony():
                         slots.append(f'C{i + 1}')
@@ -382,13 +382,13 @@ class Player:
                     elif old_card.is_colony():
                         slots.append(f'C{i + 1}')
         elif card.is_advisor():
-            if any(self.match.events['advisors on wonder spaces'].happen(self)):
+            if any(self.match.events.happen('advisors on wonder spaces', self)):
                 for (i, old_card) in enumerate(self.wonders):
                     if old_card is None or not old_card.is_natural_wonder():
                         slots.append(f'W{i + 1}')
             for i in range(len(self.advisors)):
                 slots.append(f'A{i + 1}')
-        extra_spots = self.match.events['coverable cards'].happen(self, card=card)
+        extra_spots = self.match.events.happen('coverable cards', self, card=card)
         if extra_spots:
             for (slot, old_card) in self.filled_slot_names_cards():
                 if old_card in extra_spots:
@@ -400,12 +400,12 @@ class Player:
         (slot_type, index) = self.slot_type_index_from_slot(slot)
         old_card = self.slots_from_slot_type(slot_type)[index]
         card_to_cover = None
-        while old_card is not None and any(self.match.events['cover card'].happen(self, card=card, old_card=old_card)):
+        while old_card is not None and any(self.match.events.happen('cover card', self, card=card, old_card=old_card)):
             card_to_cover = old_card
             old_card = card_to_cover.covered_by
         if old_card is not None:
             self.match.log(f'{self} replaces "{old_card}".')
-            self.match.events['replaced card'].happen(self, old_card=old_card, new_card=card)
+            self.match.events.happen('replaced card', self, old_card=old_card, new_card=card)
             self.remove(old_card)
         if card_to_cover is not None:
             card_to_cover.covered_by = card
@@ -445,7 +445,7 @@ class Player:
     def pay_for_golden_age_point(self, card):
         had_gold = self.resources[Resource.GOLD] > 0
         remainder = max(0, card.age - self.golden_age_bonus())
-        remainder = self.match.events['golden age discount'].happen(self, cost=remainder)
+        remainder = self.match.events.happen('golden age discount', self, cost=remainder)
         payment = Resources()
         if remainder:
             available_resources = self.resources.production()
@@ -474,9 +474,9 @@ class Player:
         self.match.log(f'{self} pays {payment} and gains 1 [Point].')
         self.resources -= payment
         self.points += 1
-        self.match.events['bought golden age point'].happen(self)
+        self.match.events.happen('bought golden age point', self)
         if had_gold and self.resources[Resource.GOLD] == 0:
-            self.match.events['spent last gold'].happen(self)
+            self.match.events.happen('spent last gold', self)
 
     def have_golden_age(self, card):
         bonus = self.golden_age_bonus()
@@ -488,7 +488,7 @@ class Player:
         elif card.offers_stone:
             choices.append(Resources({Resource.STONE: 2 + bonus}))
         point_cost = max(0, card.age - self.golden_age_bonus())
-        point_cost = self.match.events['golden age discount'].happen(self, cost=point_cost, check=True)
+        point_cost = self.match.events.happen('golden age discount', self, cost=point_cost, check=True)
         if self.resources.production().total() >= point_cost:
             choices.append('Buy 1 [Point]')
         if len(choices) == 1:
@@ -505,7 +505,7 @@ class Player:
             self.match.log(f'{self} gains {benefit}.')
             self.resources += benefit
             if benefit[Resource.BOOKS]:
-                self.match.events['golden age choose books'].happen(self)
+                self.match.events.happen('golden age choose books', self)
 
     def buy_action(self, action, free=False):
         card = action.card
@@ -514,15 +514,15 @@ class Player:
         if action.player is None:
             card.assign_owner(self)
             self.match.progress_board[action.row][action.col] = None
-            self.match.events['may not buy card'].happen(self, card=card)
+            self.match.events.happen('may not buy card', self, card=card)
             if card.is_colony():
-                military_requirement = card.military_requirement + self.match.events['extra colony military requirement'].happen(self)
-                military_requirement = self.match.events['colony discount'].happen(self, cost=military_requirement)
+                military_requirement = card.military_requirement + self.match.events.happen('extra colony military requirement', self)
+                military_requirement = self.match.events.happen('colony discount', self, cost=military_requirement)
                 if self.resources[Resource.MILITARY] < military_requirement:
                     raise InvalidMove(f'Military requirement not met to buy "{card}".')
             elif card.is_natural_wonder():
                 card.buying(self)
-                wonder_spaces_needed = 1 + self.match.events['extra wonder space'].happen(self, card=card)
+                wonder_spaces_needed = 1 + self.match.events.happen('extra wonder space', self, card=card)
                 if wonder_spaces_needed > self.replaceable_wonder_spaces():
                     raise InvalidMove('Not enough replaceable wonder spaces remaining.')
             if free:
@@ -530,18 +530,18 @@ class Player:
             else:
                 row = action.row + 1
                 price = row
-                price += self.match.events['extra card cost'].happen(self, card=card)
-                price = self.match.events['card discount'].happen(self, card=card, row=row, cost=price)
-                extra_payment = self.match.events['extra payment'].happen(self, card=card)
+                price += self.match.events.happen('extra card cost', self, card=card)
+                price = self.match.events.happen('card discount', self, card=card, row=row, cost=price)
+                extra_payment = self.match.events.happen('extra payment', self, card=card)
                 if self.resources[Resource.GOLD] < price + extra_payment:
                     raise InvalidMove(f'Not enough [Gold] to buy "{card}".')
                 self.match.log(f'{self} pays {price} [Gold] to buy "{card}".')
                 self.resources[Resource.GOLD] -= price
                 if extra_payment:
-                    self.match.events['make extra payment'].happen(self, card=card)
+                    self.match.events.happen('make extra payment', self, card=card)
         else:
-            buy_with = self.match.events['buy with'].happen(self, card=card)
-            price = self.match.events['buy from player'].happen(self, card=card)[0]
+            buy_with = self.match.events.happen('buy with', self, card=card)
+            price = self.match.events.happen('buy from player', self, card=card)[0]
             if buy_with:
                 buy_with = buy_with[0]
             else:
@@ -549,11 +549,11 @@ class Player:
             if buy_with is not None:
                 buy_with.assign_owner(self)
             card.assign_owner(self)
-        self.match.events['buying card'].happen(self, card=card)
-        self.match.events['buy card for gold'].happen(self, card=card, gold=price)
+        self.match.events.happen('buying card', self, card=card)
+        self.match.events.happen('buy card for gold', self, card=card, gold=price)
         if had_gold and self.resources[Resource.GOLD] == 0:
-            self.match.events['spent last gold'].happen(self)
-        if any(self.match.events['discard immediately'].happen(self, card=card)):
+            self.match.events.happen('spent last gold', self)
+        if any(self.match.events.happen('discard immediately', self, card=card)):
             card.unregister_all_events()
             self.match.update_most_least_stability_military()
             return
@@ -578,21 +578,21 @@ class Player:
             self.do_battle()
         elif card.is_golden_age():
             self.have_golden_age(card)
-        self.match.events['bought card'].happen(self, card=card)
-        self.match.events['after bought card'].happen(self, card=card)
+        self.match.events.happen('bought card', self, card=card)
+        self.match.events.happen('after bought card', self, card=card)
 
     def deploy_for_free(self, card):
         self.workers -= 1
         card.deploy()
         self.match.update_most_least_stability_military()
-        self.match.events['deployed'].happen(self, card=card)
+        self.match.events.happen('deployed', self, card=card)
 
     def deploy_action(self, action):
         if self.workers == 0:
             raise InvalidMove('No workers available to deploy.')
         card = action.card
         cost = -card.deployment_cost
-        cost = self.match.events['deploy discount'].happen(self, card=card, cost=cost)
+        cost = self.match.events.happen('deploy discount', self, card=card, cost=cost)
         if self.resources[Resource.STONE] < cost:
             raise InvalidMove(f'Not enough resources to deploy to "{card}".')
         self.match.log(f'{self} pays {cost} [Stone] to deploy to "{card}".')
@@ -620,17 +620,17 @@ class Player:
         old_card = self.wonders[index]
         if old_card is not None:
             self.match.log(f'{self} replaces "{old_card}".')
-            self.match.events['replaced card'].happen(self, old_card=old_card, new_card=card)
+            self.match.events.happen('replaced card', self, old_card=old_card, new_card=card)
             self.remove(old_card)
         self.wonders[index] = card
         self.resources += card.production_value.immediate()
 
     def hire_free_architect(self, card):
         card.completed_stages += 1
-        self.match.events['hire architect'].happen(self)
+        self.match.events.happen('hire architect', self)
         if card.completed_stages == len(card.stage_costs):
             self.match.log(f'"{card}" is ready.')
-            self.match.events['wonder ready'].happen(self)
+            self.match.events.happen('wonder ready', self)
             card.ready()
             self.place_wonder_or_natural_wonder(card)
             self.wonders_under_construction[0] = None
@@ -646,7 +646,7 @@ class Player:
         elif private is not None and private.private_architects_available == 0:
             raise InvalidMove(f'[{private}] No available architects to hire.')
         cost = -card.stage_costs[card.completed_stages]
-        cost = self.match.events['hire discount'].happen(self, cost=cost)
+        cost = self.match.events.happen('hire discount', self, cost=cost)
         if self.resources[Resource.STONE] < cost:
             raise InvalidMove(f'Not enough resources for next stage of "{card}".')
         if private is None:
@@ -665,7 +665,7 @@ class Player:
         if card.turns_explored == card.exploration_turns:
             self.match.log(f'"{card}" has been discovered.')
             card.discovered()
-            self.match.events['discover'].happen(self, card=card)
+            self.match.events.happen('discover', self, card=card)
             self.place_wonder_or_natural_wonder(card)
             self.wonders_under_construction[0] = None
             card.turns_explored = 0
@@ -685,7 +685,7 @@ class Player:
             self.turmoil += 1
             self.resources[Resource.STABILITY] -= 2
         if self.specials:
-            if self.match.events['keep dynasty effects'].happen(self):
+            if self.match.events.happen('keep dynasty effects', self):
                 self.specials[0].covered_by = card
             else:
                 self.remove(self.specials[0])
@@ -698,7 +698,7 @@ class Player:
     def turmoil_action(self, action):
         self.match.log(f'{self} takes a turmoil card.')
         self.match.turmoil -= 1
-        defer_taking_turmoil = any(self.match.events['defer taking turmoil'].happen(self))
+        defer_taking_turmoil = any(self.match.events.happen('defer taking turmoil', self))
         if not defer_taking_turmoil:
             self.turmoil += 1
             self.resources[Resource.STABILITY] -= 2
@@ -716,7 +716,7 @@ class Player:
                     break
         else:
             self.match.log(f'{self} gains 2 [Gold].')
-            if defer_taking_turmoil and not any(self.match.events['discard gold turmoil'].happen(self)):
+            if defer_taking_turmoil and not any(self.match.events.happen('discard gold turmoil', self)):
                 self.turmoil += 1
                 self.resources[Resource.STABILITY] -= 2
             self.resources[Resource.GOLD] += 2
@@ -731,7 +731,7 @@ class Player:
             self.passed_first = True
         if len(passed_players) > len(self.match.players) - max_most_min_least:
             self.passed_last = True
-        self.match.events['pass'].happen(self)
+        self.match.events.happen('pass', self)
 
     def resign_action(self, action):
         self.match.get_move(self, 'Are you sure you want to resign?', ('Yes',))
@@ -778,11 +778,11 @@ class Player:
 
     def take_turn(self):
         self.turn_number += 1
-        if any(self.match.events['skip turn'].happen(self)):
+        if any(self.match.events.happen('skip turn', self)):
             self.remaining_main_actions = 0
             return
         self.remaining_main_actions = 1
-        if any(self.match.events['additional action'].happen(self)):
+        if any(self.match.events.happen('additional action', self)):
             self.remaining_main_actions += 1
         while self.remaining_main_actions:
             self.take_one_action()
@@ -828,7 +828,7 @@ class Player:
                     self.workers += 1
                     self.grown_workers += 1
                     break
-        self.match.events['take worker'].happen(self, growth=False)
+        self.match.events.happen('take worker', self, growth=False)
 
     def return_worker(self, no_confirmation=False):
         if self.workers == 0:
@@ -869,7 +869,7 @@ class Player:
     def remove_cards(self, cards):
         cards_to_remove = set(cards)
         for card in cards:
-            cards_to_remove |= set(self.match.events['remove with'].happen(self, card=card))
+            cards_to_remove |= set(self.match.events.happen('remove with', self, card=card))
         for (slot, board_card) in self.filled_slot_names_cards():
             if board_card in cards_to_remove:
                 card = board_card
@@ -895,7 +895,7 @@ class Player:
                         while base_card.covered_by is not card:
                             base_card = base_card.covered_by
                         base_card.covered_by = card.covered_by
-                    self.match.events['when removed'].happen(self, card=card)
+                    self.match.events.happen('when removed', self, card=card)
                     card.unregister_all_events()
         self.match.update_most_least_stability_military()
 
@@ -950,13 +950,13 @@ class Player:
                     mentioned_negative_books = True
                 remainder += self.resources[resource_type] + amount
                 self.resources[resource_type] = 0
-                if any(self.match.events['no resource point loss'].happen(self)):
+                if any(self.match.events.happen('no resource point loss', self)):
                     pass
                 elif not self.resource_deficit_points[resource_type] and self.points:
                     self.match.log(f'{self} loses 1 [Point] for negative {resource_type}.')
                     self.points -= 1
                     if lost_to_war:
-                        self.match.events['lost to war'].happen(self, points=1)
+                        self.match.events.happen('lost to war', self, points=1)
                     self.resource_deficit_points[resource_type] = -1
                 elif self.resource_deficit_points[resource_type]:
                     self.match.log(f'{self} already lost a [Point] for negative {resource_type}.')
@@ -973,13 +973,13 @@ class Player:
                 remainder -= self.resources[Resource.BOOKS]
                 self.resources[Resource.BOOKS] = 0
                 self.match.log(f'{self} goes negative in [Books] and must lose {remainder} other resources.')
-                if any(self.match.events['no resource point loss'].happen(self)):
+                if any(self.match.events.happen('no resource point loss', self)):
                     pass
                 elif not self.resource_deficit_points[Resource.BOOKS] and self.points:
                     self.match.log(f'{self} loses 1 [Point] for negative [Books].')
                     self.points -= 1
                     if lost_to_war:
-                        self.match.events['lost to war'].happen(self, points=1)
+                        self.match.events.happen('lost to war', self, points=1)
                     self.resource_deficit_points[Resource.BOOKS] = -1
                 elif self.resource_deficit_points[Resource.BOOKS]:
                     if not mentioned_negative_books:
@@ -1021,7 +1021,7 @@ class Player:
                         self.match.get_move(self, 'Confirm resource loss?', ('Confirm',))
         if lost_to_war:
             total_loss -= self.resources.production()
-            self.match.events['lost to war'].happen(self, resources=total_loss)
+            self.match.events.happen('lost to war', self, resources=total_loss)
 
     def production(self, projected=False):
         total_production = Resources()
@@ -1029,7 +1029,7 @@ class Player:
             total_production += card.produce(projected=projected)
         for worker_pool in self.worker_pools:
             total_production += worker_pool.total_resource_cost
-        for additional_production in self.match.events['additional production'].happen(self, production=total_production, projected=projected):
+        for additional_production in self.match.events.happen('additional production', self, production=total_production, projected=projected):
             total_production += additional_production
         if self.resources[Resource.STABILITY] < 0:
             total_production[Resource.BOOKS] += self.resources[Resource.STABILITY]
@@ -1060,14 +1060,14 @@ class Player:
         self.lose_resources(negative_production)
 
     def war(self, penalty):
-        if self.resources[Resource.MILITARY] + self.match.events['extra war military'].happen(self) < self.match.war_value:
-            if not any(self.match.events['no defeated effect'].happen(self)):
-                self.match.events['defeated'].happen(self)
-                if not any(self.match.events['spared war point loss'].happen(self)):
+        if self.resources[Resource.MILITARY] + self.match.events.happen('extra war military', self) < self.match.war_value:
+            if not any(self.match.events.happen('no defeated effect', self)):
+                self.match.events.happen('defeated', self)
+                if not any(self.match.events.happen('spared war point loss', self)):
                     if self.points > 0:
                         self.match.log(f'{self} loses 1 [Point] for being defeated in the "{self.match.war}".')
                         self.points -= 1
-                        self.match.events['lost to war'].happen(self, points=1)
+                        self.match.events.happen('lost to war', self, points=1)
                     else:
                         self.match.log(f'{self} is spared the [Point] loss from being defeated in the "{self.match.war}".')
                 resource_loss_amount = penalty.total()
@@ -1103,11 +1103,11 @@ class Player:
                     self.match.log(f'{self} mitigates the resource loss entirely with [Stability].')
             return True
         else:
-            self.match.events['not defeated'].happen(self)
+            self.match.events.happen('not defeated', self)
             return False
 
     def famine(self):
-        famine = self.match.event.famine + self.match.events['extra famine'].happen(self)
+        famine = self.match.event.famine + self.match.events.happen('extra famine', self)
         self.lose_resources(Resources({Resource.FOOD: famine}))
 
     def discard_turmoil(self):
@@ -1119,7 +1119,7 @@ class Player:
     def score(self, projected=False):
         if self.nation is None:
             return 0
-        extra_stone = self.match.events['extra scoring stone'].happen(self, projected=projected)
+        extra_stone = self.match.events.happen('extra scoring stone', self, projected=projected)
         total = self.points
         for card in self.colony_cards():
             total += card.points
@@ -1137,7 +1137,7 @@ class Player:
     def resource_remainder(self):
         if self.nation is None:
             return 0
-        extra_stone = self.match.events['extra scoring stone'].happen(self, projected=True)
+        extra_stone = self.match.events.happen('extra scoring stone', self, projected=True)
         self.resources[Resource.STONE] += extra_stone
         remainder = self.resources.total() % 10
         self.resources[Resource.STONE] -= extra_stone
