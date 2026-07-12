@@ -10,6 +10,7 @@ from . import event_cards
 from . import progress_cards
 from . import nations
 from .player import Player
+from .stats import NoStats
 
 ordinals = ('0th', '1st', '2nd', '3rd', '4th', '5th', '6th')
 
@@ -133,7 +134,7 @@ def s_if_not_1(value):
     return 's' if value != 1 else ''
 
 class Match:
-    def __init__(self, player_names=None, seed=None, replay=None, move_getter=None, logger=None, rules={}):
+    def __init__(self, player_names=None, seed=None, replay=None, move_getter=None, logger=None, rules={}, stats=None):
         match_growth_resources = 2
         player_growth_resources = {}
         if 'growth_resources' in rules:
@@ -245,6 +246,7 @@ class Match:
         self.replay_lines.append('')
         self.invalid_move = None
         self.reset()
+        self.stats = stats if stats is not None else NoStats()
 
     def reset(self):
         self.random = random.Random(self.seed)
@@ -413,6 +415,8 @@ class Match:
         return drawn_cards
 
     def drafting_phase(self):
+        for nation in self.available_nations:
+            self.stats.collect('Nation Available', nation.name)
         player_order_string = ', '.join(str(player) for player in self.players)
         self.log(f'Initial player order: {player_order_string}')
         self.log('Drafting!')
@@ -433,6 +437,7 @@ class Match:
                 player.assign_nation(nation)
                 self.available_nations.remove(nation)
                 self.get_move(player, 'Confirm?', ('Confirm',))
+            self.stats.collect('Nation Drafted', nation.name)
         self.available_nations = []
 
     def progress_phase(self):
@@ -682,6 +687,8 @@ class Match:
                     self.log(f'[{ordinals[i+1]}] {player_scores[player.name]:{-score_width}d}   - {player}')
             else:
                 self.log(f'[{ordinals[i+1]}] {player_scores[player.name]:{-score_width}d} - {player}')
+            if i == 0:
+                self.stats.collect('Nation Wins', player.nation.name)
 
     def end_match(self):
         self.game_over = True

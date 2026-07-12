@@ -1,9 +1,13 @@
+import sys
 import argparse
 import os
 import pathlib
 import json
+import traceback
+import multiprocessing
 
 from . import *
+from . import untar
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument('--seed')
@@ -14,6 +18,8 @@ arg_parser.add_argument('--replay-out')
 arg_parser.add_argument('--log')
 arg_parser.add_argument('--state')
 arg_parser.add_argument('--players', nargs='*')
+arg_parser.add_argument('--stats')
+arg_parser.add_argument('--replays')
 args = arg_parser.parse_args()
 
 seed = args.seed
@@ -24,7 +30,7 @@ if args.replay is not None:
         replay = replay_file.read().rstrip('\n')
 
 player_names = None
-if replay is None:
+if replay is None and args.replays is None:
     if args.players is None:
         player_names = ('Sidonia', 'Sundae', 'Nutmeg')
     else:
@@ -33,35 +39,59 @@ if replay is None:
 quit_after_replay = args.quit_after_replay
 verbose = not args.quiet
 
-interface = cli.NationsCLI(player_names=player_names, seed=seed, replay=replay, quit_after_replay=quit_after_replay, verbose=verbose)
+stats_collectors = []
 
-exception = None
-try:
-    interface.play()
-except Exception as e:
-    exception = e
+def run_match(replay):
+    stats_collector = None
+    if args.stats is not None:
+        stats_collector = stats.Stats()
 
-if args.replay_out is not None:
-    replay_out_path = pathlib.Path(args.replay_out)
-    os.makedirs(replay_out_path.parent, exist_ok=True)
-    with open(replay_out_path, 'w') as replay_out_file:
-        replay_out_file.write(interface.get_replay())
+    interface = cli.NationsCLI(player_names=player_names, seed=seed, replay=replay, quit_after_replay=quit_after_replay, verbose=verbose, stats=stats_collector)
 
-if args.log is not None:
-    log_path = pathlib.Path(args.log)
-    os.makedirs(log_path.parent, exist_ok=True)
-    with open(log_path, 'w') as log_file:
-        log_file.write(interface.get_log())
-
-if args.state is not None:
-    state_path = pathlib.Path(args.state)
-    os.makedirs(state_path.parent, exist_ok=True)
-    with open(state_path, 'w') as state_file:
-        json.dump(interface.get_state(), state_file, indent=4)
-
-if exception is not None:
-    import traceback
     try:
-        raise exception
-    except Exception:
+        interface.play()
+    except Exception as e:
         traceback.print_exc()
+
+    return (interface, stats_collector)
+
+if replay is not None or args.replays is None:
+    (interface, stats_collector) = run_match(replay)
+
+    if args.replay_out is not None:
+        replay_out_path = pathlib.Path(args.replay_out)
+        os.makedirs(replay_out_path.parent, exist_ok=True)
+        with open(replay_out_path, 'w') as replay_out_file:
+            replay_out_file.write(interface.get_replay())
+
+    if args.log is not None:
+        log_path = pathlib.Path(args.log)
+        os.makedirs(log_path.parent, exist_ok=True)
+        with open(log_path, 'w') as log_file:
+            log_file.write(interface.get_log())
+
+    if args.state is not None:
+        state_path = pathlib.Path(args.state)
+        os.makedirs(state_path.parent, exist_ok=True)
+        with open(state_path, 'w') as state_file:
+            json.dump(interface.get_state(), state_file, indent=4)
+
+    if args.stats is not None:
+        stats_collectors.append(stats_collector)
+
+if args.replays is not None:
+    replays = untar.extract_replays(args.replays)
+    with multiprocessing.Pool() as pool:
+        retvals = pool.map(run_match, replays, 1)
+
+if args.stats is not None:
+    for (interface, stats_collector) in retvals:
+        stats_collectors.append(stats_collector)
+    total_stats = stats.Stats(stats_collectors)
+    if args.stats == '-':
+        total_stats.report(sys.stdout)
+    else:
+        stats_path = pathlib.Path(args.stats)
+        os.makedirs(stats_path.parent, exist_ok=True)
+        with open(stats_path, 'w') as stats_file:
+            total_stats.report(stats_file)

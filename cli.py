@@ -31,11 +31,11 @@ class NationsCLI:
     def logger(self, message):
         print(message)
 
-    def __init__(self, player_names, seed=None, replay=None, quit_after_replay=False, verbose=True, rules={}):
+    def __init__(self, player_names=None, seed=None, replay=None, quit_after_replay=False, verbose=True, rules={}, stats=None):
         self.verbose = verbose
         self.quit_after_replay = quit_after_replay
         logger = self.logger if verbose else None
-        self.match = match.Match(player_names=player_names, seed=seed, replay=replay, move_getter=self.get_move_prompt, logger=logger, rules=rules)
+        self.match = match.Match(player_names=player_names, seed=seed, replay=replay, move_getter=self.get_move_prompt, logger=logger, rules=rules, stats=stats)
 
     def nation_board(self, nation):
         s = f'{nation.name}:\n'
