@@ -1,10 +1,8 @@
+from .utils import *
 from .exceptions import *
 from .resources import *
 from .actions import *
 from . import nations
-
-def s_if_not_1(value):
-    return 's' if value != 1 else ''
 
 class Player:
     def __init__(self, match, name):
@@ -512,6 +510,9 @@ class Player:
         had_gold = self.resources[Resource.GOLD] > 0
         buy_with = None
         if action.player is None:
+            self.match.stats.collect(self.match, 'Card Bought', card)
+            self.match.cards_bought += 1
+            self.match.stats.collect(self.match, f'Card Bought {ordinal(self.match.cards_bought)}', card)
             card.assign_owner(self)
             self.match.progress_board[action.row][action.col] = None
             self.match.events.happen('may not buy card', self, card=card)

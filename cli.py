@@ -1,8 +1,6 @@
 from . import match
+from .utils import *
 from .phases import *
-
-def s_if_not_1(value):
-    return 's' if value != 1 else ''
 
 class NationsCLI:
     def get_move_prompt(self, choice, options, undo):

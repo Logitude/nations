@@ -1,6 +1,7 @@
 import os
 import random
 
+from .utils import *
 from .exceptions import *
 from .phases import *
 from .resources import *
@@ -11,8 +12,6 @@ from . import progress_cards
 from . import nations
 from .player import Player
 from .stats import NoStats
-
-ordinals = ('0th', '1st', '2nd', '3rd', '4th', '5th', '6th')
 
 card_draw_limits = {
     2: {
@@ -129,9 +128,6 @@ card_draw_weights = {
         ProgressCardType.WAR: 4
     }
 }
-
-def s_if_not_1(value):
-    return 's' if value != 1 else ''
 
 class Match:
     def __init__(self, player_names=None, seed=None, replay=None, move_getter=None, logger=None, rules={}, stats=None):
@@ -416,7 +412,7 @@ class Match:
 
     def drafting_phase(self):
         for nation in self.available_nations:
-            self.stats.collect('Nation Available', nation.name)
+            self.stats.collect(self, 'Nation Available', nation.name)
         player_order_string = ', '.join(str(player) for player in self.players)
         self.log(f'Initial player order: {player_order_string}')
         self.log('Drafting!')
@@ -437,7 +433,7 @@ class Match:
                 player.assign_nation(nation)
                 self.available_nations.remove(nation)
                 self.get_move(player, 'Confirm?', ('Confirm',))
-            self.stats.collect('Nation Drafted', nation.name)
+            self.stats.collect(self, 'Nation Drafted', nation.name)
         self.available_nations = []
 
     def progress_phase(self):
@@ -492,6 +488,8 @@ class Match:
         else:
             drawn_cards = self.progress_cards[age][:num_cards_to_draw]
             del self.progress_cards[age][:num_cards_to_draw]
+        for card in drawn_cards:
+            self.stats.collect(self, 'Card Available', card)
         row_1_cards_needed = len(self.progress_board[0]) - len(remaining_cards)
         self.progress_board[0][len(remaining_cards):] = drawn_cards[:row_1_cards_needed]
         del drawn_cards[:row_1_cards_needed]
@@ -682,13 +680,13 @@ class Match:
         for (i, player) in enumerate(placement):
             if self.resource_remainder_tiebreaker and any_ties:
                 if list(player_scores.values()).count(player_scores[player.name]) > 1:
-                    self.log(f'[{ordinals[i+1]}] {player_scores[player.name]:{-score_width}d}.{player_resource_remainders[player.name]} - {player}')
+                    self.log(f'[{ordinal(i + 1)}] {player_scores[player.name]:{-score_width}d}.{player_resource_remainders[player.name]} - {player}')
                 else:
-                    self.log(f'[{ordinals[i+1]}] {player_scores[player.name]:{-score_width}d}   - {player}')
+                    self.log(f'[{ordinal(i + 1)}] {player_scores[player.name]:{-score_width}d}   - {player}')
             else:
-                self.log(f'[{ordinals[i+1]}] {player_scores[player.name]:{-score_width}d} - {player}')
+                self.log(f'[{ordinal(i + 1)}] {player_scores[player.name]:{-score_width}d} - {player}')
             if i == 0:
-                self.stats.collect('Nation Wins', player.nation.name)
+                self.stats.collect(self, 'Nation Won', player.nation.name)
 
     def end_match(self):
         self.game_over = True
@@ -700,6 +698,7 @@ class Match:
         raise GameOver()
 
     def play_round(self):
+        self.cards_bought = 0
         self.round_number += 1
         self.maintenance_phase()
         self.action_phase()
@@ -708,6 +707,7 @@ class Match:
     def play(self):
         while True:
             try:
+                self.stats.collect(self, 'Player Count', len(self.players))
                 self.progress_phase()
                 self.drafting_phase()
                 while True:

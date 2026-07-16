@@ -1,11 +1,9 @@
 import collections
 
+from .utils import *
 from .cards import *
 from .resources import *
 from .actions import *
-
-def s_if_not_1(value):
-    return 's' if value != 1 else ''
 
 class EventCard(Card):
     card_type = CardType.EVENT

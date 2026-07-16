@@ -1,11 +1,9 @@
+from .utils import *
 from .exceptions import *
 from .cards import *
 from .resources import *
 from .phases import *
 from .actions import *
-
-def s_if_not_1(value):
-    return 's' if value != 1 else ''
 
 class ProgressCard(Card):
     card_type = CardType.PROGRESS
@@ -3381,6 +3379,8 @@ class VictoriaFalls(Age4NaturalWonder):
                 colonies_drawn.append(card)
         if colonies_drawn:
             self.match.progress_board.append(colonies_drawn)
+            for card in colonies_drawn:
+                self.match.stats.collect(self.match, 'Card Available', card)
         else:
             self.match.log(f'[{self}] No colonies drawn.')
 
