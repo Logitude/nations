@@ -109,7 +109,7 @@ class Stats:
     def report_percentages(self, player_count, available_stat_type, chosen_stat_type, f):
         if available_stat_type not in self.stats[player_count] or chosen_stat_type not in self.stats[player_count]:
             return
-        print(f'  {chosen_stat_type} %:', file=f)
+        print(f'  ({chosen_stat_type} / {available_stat_type}) %:', file=f)
         percentages = [(amount / self.stats[player_count][available_stat_type][thing], thing) for (thing, amount) in self.stats[player_count][chosen_stat_type].items()]
         for (amount, thing) in sorted(percentages, reverse=True):
             print(f'    {thing}: {amount * 100:0.1f}%', file=f)
@@ -123,7 +123,7 @@ class Stats:
     def report_dynasty_percentages(self, player_count, f):
         available_stat_type = 'Nation Drafted'
         chosen_stat_type = 'Dynasty Played'
-        print(f'  {chosen_stat_type} %:', file=f)
+        print(f'  ({chosen_stat_type} / {available_stat_type}) %:', file=f)
         percentages = [(amount / self.stats[player_count][available_stat_type][self.dynasty_nation(thing)], thing) for (thing, amount) in self.stats[player_count][chosen_stat_type].items()]
         for (amount, thing) in sorted(percentages, reverse=True):
             print(f'    {thing}: {amount * 100:0.1f}%', file=f)
