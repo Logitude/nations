@@ -1,4 +1,5 @@
 from .utils import *
+from . import nations
 
 def stat_name(thing):
     name = thing
@@ -19,6 +20,7 @@ stats_order = [
     'Nation Available',
     'Nation Drafted',
     'Nation Won',
+    'Dynasty Played',
     'Card Available',
     'Card Bought'
 ]
@@ -99,6 +101,7 @@ class Stats:
                     print(f'    {thing}: {amount:0.1f}', file=f)
         self.report_percentages(player_count, 'Nation Available', 'Nation Drafted', f)
         self.report_percentages(player_count, 'Nation Drafted', 'Nation Won', f)
+        self.report_dynasty_percentages(player_count, f)
         self.report_percentages(player_count, 'Card Available', 'Card Bought', f)
         for i in range(1, 33):
             self.report_percentages(player_count, 'Card Available', f'Card Bought {ordinal(i)}', f)
@@ -108,6 +111,20 @@ class Stats:
             return
         print(f'  {chosen_stat_type} %:', file=f)
         percentages = [(amount / self.stats[player_count][available_stat_type][thing], thing) for (thing, amount) in self.stats[player_count][chosen_stat_type].items()]
+        for (amount, thing) in sorted(percentages, reverse=True):
+            print(f'    {thing}: {amount * 100:0.1f}%', file=f)
+
+    def dynasty_nation(self, dynasty):
+        for nation in nations.all_nations:
+            for card in nation.dynasties:
+                if card.name == dynasty:
+                    return nation.name
+
+    def report_dynasty_percentages(self, player_count, f):
+        available_stat_type = 'Nation Drafted'
+        chosen_stat_type = 'Dynasty Played'
+        print(f'  {chosen_stat_type} %:', file=f)
+        percentages = [(amount / self.stats[player_count][available_stat_type][self.dynasty_nation(thing)], thing) for (thing, amount) in self.stats[player_count][chosen_stat_type].items()]
         for (amount, thing) in sorted(percentages, reverse=True):
             print(f'    {thing}: {amount * 100:0.1f}%', file=f)
 

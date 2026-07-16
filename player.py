@@ -678,6 +678,7 @@ class Player:
         self.match.update_most_least_stability_military()
 
     def play_dynasty(self, card, defer_taking_turmoil=False):
+        self.match.stats.collect(self.match, 'Dynasty Played', card.name)
         self.match.log(f'{self} plays "{card}".')
         for i in range(len(self.dynasties)):
             if self.dynasties[i] is card:
