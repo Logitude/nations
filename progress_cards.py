@@ -3237,6 +3237,7 @@ class CapeOfGoodHope(Age3NaturalWonder):
 
     def discovered(self):
         self.register_for_event('colony discount', self.owned, self.colony_discount)
+        self.global_effect = True
 
     def colony_discount(self, player, **kwargs):
         if not kwargs.get('check', False):

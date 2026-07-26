@@ -106,6 +106,7 @@ class UmayyadCaliphate(DynastyCard):
 
     def play(self):
         self.register_for_event('colony discount', self.owned, self.colony_discount)
+        self.global_effect = True
 
     def colony_discount(self, player, **kwargs):
         if not kwargs.get('check', False):
