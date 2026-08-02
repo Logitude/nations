@@ -1092,7 +1092,7 @@ class Player:
                                     max_of_resource = min(-penalty[resource_type], remainder)
                                     options = tuple(range(min_of_resource, max_of_resource + 1))
                                     remaining = '/'.join(f'{resource_type.singular()}' for resource_type in remaining_penalty_types)
-                                    amount_to_mitigate = self.match.get_move(self, f'Prevent how much {resource_type.singular()} loss? (with remaining [Stability] preventing {remaining} loss)', options)
+                                    amount_to_mitigate = self.match.get_move(self, f'Prevent how much {resource_type.singular()} loss? (with any remaining [Stability] preventing {remaining} loss)', options)
                                     mitigation[resource_type] += amount_to_mitigate
                                     remainder -= amount_to_mitigate
                             if remainder:
