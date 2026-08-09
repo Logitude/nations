@@ -532,8 +532,6 @@ class Match:
         for player in self.players[::-1]:
             player.new_round()
         if self.round_number != 1:
-            self.undo_allowed = False
-            self.undo_disallowed_reason = 'Beginning of the round.'
             self.progress_phase()
             self.undo_allowed = False
             self.undo_disallowed_reason = 'Beginning of the round.'
