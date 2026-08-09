@@ -283,6 +283,7 @@ class Match:
         self.previous_player = None
         self.game_over = False
         self.round_number = 0
+        self.round_starts = {0: 0}
         self.phase = None
         self.architects = 0
         self.turmoil = 0
@@ -700,6 +701,7 @@ class Match:
     def play_round(self):
         self.cards_bought = 0
         self.round_number += 1
+        self.round_starts[self.round_number] = len(self.replay_lines) - (self.replay_lines.index('') + 1)
         self.maintenance_phase()
         self.action_phase()
         self.resolution_phase()
@@ -792,6 +794,7 @@ class Match:
                     progress_board[f'P{row + 1}{col + 1}'] = card.abbr
         s['progress_board'] = progress_board
         s['round'] = self.round_number
+        s['round_starts'] = dict(self.round_starts)
         s['phase'] = str(self.phase)
         s['architects'] = self.architects
         s['turmoil'] = self.turmoil
