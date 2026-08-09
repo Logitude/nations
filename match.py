@@ -772,17 +772,11 @@ class Match:
         player.need_confirmation = str(option) != 'Confirm'
         return option
 
-    def undo_lines(self):
-        return [i for (i, line) in enumerate(self.replay_lines) if line == 'UNDO']
-
     def get_replay(self, clean=True):
-        remove_lines = self.undo_lines() if clean else []
-        return '\n'.join(line for (i, line) in enumerate(self.replay_lines) if i not in remove_lines) + '\n'
+        return '\n'.join(self.replay_lines) + '\n'
 
     def get_log(self, clean=True):
-        remove_lines = self.undo_lines() if clean else []
-        offset = self.replay_lines.index('')
-        return '\n'.join(line for (i, chunk) in enumerate(self.log_lines) if (i + offset) not in remove_lines for line in chunk) + '\n'
+        return '\n'.join(line for chunk in self.log_lines for line in chunk) + '\n'
 
     def get_state(self):
         s = {}
