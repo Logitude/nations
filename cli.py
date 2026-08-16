@@ -266,11 +266,11 @@ class NationsCLI:
         if exception is not None:
             raise exception
 
-    def get_replay(self, clean=False):
-        return self.match.get_replay(clean=clean)
+    def get_replay(self):
+        return self.match.get_replay()
 
-    def get_log(self, clean=False):
-        return self.match.get_log(clean=clean)
+    def get_log(self):
+        return self.match.get_log()
 
     def get_state(self):
         return self.match.get_state()

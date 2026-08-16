@@ -772,10 +772,10 @@ class Match:
         player.need_confirmation = str(option) != 'Confirm'
         return option
 
-    def get_replay(self, clean=True):
+    def get_replay(self):
         return '\n'.join(self.replay_lines) + '\n'
 
-    def get_log(self, clean=True):
+    def get_log(self):
         return '\n'.join(line for chunk in self.log_lines for line in chunk) + '\n'
 
     def get_state(self):
