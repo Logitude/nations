@@ -152,7 +152,7 @@ class Match:
             prev_player_name = None
             replay_player_names = []
             in_header = True
-            for line in replay.replace('\r', '').rstrip('\n').split('\n'):
+            for line in replay.splitlines():
                 if in_header:
                     if line.startswith('seed '):
                         seed = line[len('seed '):]
