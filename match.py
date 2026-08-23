@@ -283,6 +283,7 @@ class Match:
         self.previous_player = None
         self.game_over = False
         self.round_number = 0
+        self.move_number = 0
         self.round_starts = {0: 0}
         self.phase = None
         self.architects = 0
@@ -699,7 +700,7 @@ class Match:
     def play_round(self):
         self.cards_bought = 0
         self.round_number += 1
-        self.round_starts[self.round_number] = len(self.replay_lines) - (self.replay_lines.index('') + 1)
+        self.round_starts[self.round_number] = self.move_number
         self.maintenance_phase()
         self.action_phase()
         self.resolution_phase()
@@ -740,21 +741,21 @@ class Match:
             self.next_move_options = tuple(str(option) for option in options)
             if self.replaying_invalid_or_undo > 0:
                 self.replaying_invalid_or_undo -= 1
+                if self.replaying_invalid_or_undo > 0:
+                    self.move_number += 1
             if self.move_list:
                 move = self.move_list.pop(0)
-                if move == 'UNDO':
-                    option = move
+                for option in options:
+                    if str(option) == move:
+                        break
                 else:
-                    for option in options:
-                        if str(option) == move:
-                            break
-                    else:
-                        self.replay_lines.append(move)
-                        self.log_lines.append([])
-                        raise InvalidMove(f'Not a valid option: {move}')
+                    self.replay_lines.append(move)
+                    self.log_lines.append([])
+                    raise InvalidMove(f'Not a valid option: {move}')
             else:
                 option = self.move_getter(choice, tuple(options), self.undo_allowed)
             if not self.replaying_invalid_or_undo:
+                self.move_number += 1
                 self.replay_lines.append(str(option))
                 self.log_lines.append([])
                 self.invalid_move = None
@@ -792,6 +793,7 @@ class Match:
                     progress_board[f'P{row + 1}{col + 1}'] = card.abbr
         s['progress_board'] = progress_board
         s['round'] = self.round_number
+        s['move_number'] = self.move_number
         s['round_starts'] = dict(self.round_starts)
         s['phase'] = str(self.phase)
         s['architects'] = self.architects
