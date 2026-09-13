@@ -687,11 +687,8 @@ class Player:
             self.turmoil += 1
             self.resources[Resource.STABILITY] -= 2
         if self.specials:
-            if self.match.events.happen('keep dynasty effects', self):
-                self.specials[0].covered_by = card
-            else:
-                self.remove(self.specials[0])
-                self.specials[0] = card
+            self.remove(self.specials[0])
+            self.specials[0] = card
         else:
             self.nation.place_dynasty(self, card)
         self.resources += card.production_value.immediate()

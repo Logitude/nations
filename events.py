@@ -105,7 +105,6 @@ class Events:
         self.define_basic_event('force least stability')
         self.define_basic_event('golden age choose books')
         self.define_basic_event('hire architect')
-        self.define_basic_event('keep dynasty effects')
         self.define_basic_event('least military')
         self.define_basic_event('least stability')
         self.define_basic_event('lost to war')

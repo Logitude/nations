@@ -211,7 +211,6 @@ class AxumiteKingdom(DynastyCard):
         self.register_for_event('extra payment', self.other_buying_marked, self.extra_payment)
         self.register_for_event('make extra payment', self.true, self.pay_owner)
         self.register_for_event('buying card', self.is_marked_card, self.unmark_card)
-        self.register_for_event('keep dynasty effects', self.owned, self.got_replaced)
 
     def mark_card(self, player, **kwargs):
         possible_marks = {}
@@ -242,10 +241,6 @@ class AxumiteKingdom(DynastyCard):
 
     def unmark_card(self, player, **kwargs):
         self.marked_cards.remove(kwargs['card'])
-
-    def got_replaced(self, player, **kwargs):
-        self.unregister_for_event('after event reveal')
-        return True
 
     def state(self):
         s = super().state()
