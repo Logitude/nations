@@ -740,6 +740,7 @@ class RomanRepublic(DynastyCard):
 
     def play(self):
         self.register_for_event('end of round', self.has_markers, self.reduce_stability)
+        self.register_for_event('when removed', self.is_self_and_has_markers, self.reduce_stability)
 
     def action_available(self, player):
         return player is self.owner and self.match.architects
@@ -752,6 +753,9 @@ class RomanRepublic(DynastyCard):
 
     def has_markers(self, player, **kwargs):
         return player is self.owner and self.markers
+
+    def is_self_and_has_markers(self, player, **kwargs):
+        return player is self.owner and kwargs['card'] is self and self.markers
 
     def reduce_stability(self, player, **kwargs):
         self.match.log(f'[{self}] {player} loses {self.markers} [Stability].')
