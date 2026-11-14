@@ -258,13 +258,15 @@ class Player:
         self.match.get_move(self, 'Confirm?', ('Confirm',))
 
     def can_buy_card(self, card, row, free=False):
-        if not free:
+        if free:
+            price = 0
+        else:
             price = row
             price += self.match.events.happen('extra card cost', self, card=card, check=True)
             price = self.match.events.happen('card discount', self, card=card, row=row, cost=price, check=True)
-            extra_payment = self.match.events.happen('extra payment', self, card=card, check=True)
-            if self.resources[Resource.GOLD] < price + extra_payment:
-                return False
+        extra_payment = self.match.events.happen('extra payment', self, card=card, check=True)
+        if self.resources[Resource.GOLD] < price + extra_payment:
+            return False
         if any(self.match.events.happen('may not buy card', self, card=card, check=True)):
             return False
         if card.is_colony():
@@ -533,13 +535,14 @@ class Player:
                 price = row
                 price += self.match.events.happen('extra card cost', self, card=card)
                 price = self.match.events.happen('card discount', self, card=card, row=row, cost=price)
-                extra_payment = self.match.events.happen('extra payment', self, card=card)
-                if self.resources[Resource.GOLD] < price + extra_payment:
-                    raise InvalidMove(f'Not enough [Gold] to buy "{card}".')
+            extra_payment = self.match.events.happen('extra payment', self, card=card)
+            if self.resources[Resource.GOLD] < price + extra_payment:
+                raise InvalidMove(f'Not enough [Gold] to buy "{card}".')
+            if not free:
                 self.match.log(f'{self} pays {price} [Gold] to buy "{card}".')
                 self.resources[Resource.GOLD] -= price
-                if extra_payment:
-                    self.match.events.happen('make extra payment', self, card=card)
+            if extra_payment:
+                self.match.events.happen('make extra payment', self, card=card)
         else:
             buy_with = self.match.events.happen('buy with', self, card=card)
             price = self.match.events.happen('buy from player', self, card=card)[0]
