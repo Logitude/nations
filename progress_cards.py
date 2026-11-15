@@ -2733,7 +2733,7 @@ class FredericChopin(Age4Advisor):
         return [(self.owner, self)]
 
     def is_this_card(self, player, **kwargs):
-        return kwargs['card'] is self
+        return kwargs['card'] is self and not self.owner.passed and player.resources[Resource.GOLD] >= 5
 
     def buy_this_card(self, player, **kwargs):
         return (self, 5)
