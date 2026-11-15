@@ -2717,7 +2717,8 @@ class FredericChopin(Age4Advisor):
     def buy(self):
         self.register_for_event('additional production', self.owned, self.double_books)
         self.register_for_event('additional buys', self.not_passed, self.this_card)
-        self.register_for_event('buy from player', self.is_this_card, self.buy_this_card)
+        self.register_for_event('card price', self.is_this_card, self.buy_this_card)
+        self.register_for_event('pay for card', self.activated_self, self.pay_for)
 
     def double_books(self, player, **kwargs):
         additional_books = kwargs['production'][Resource.BOOKS]
@@ -2735,10 +2736,15 @@ class FredericChopin(Age4Advisor):
         return kwargs['card'] is self
 
     def buy_this_card(self, player, **kwargs):
+        return (self, 5)
+
+    def activated_self(self, player, **kwargs):
+        return kwargs['activated'] is self
+
+    def pay_for(self, player, **kwargs):
         self.match.log(f'{player} pays 5 [Gold] to buy "{self}" from {self.owner}.')
         player.resources[Resource.GOLD] -= 5
         self.owner.remove(self)
-        return 5
 
 class FrederickTheGreat(Age4Advisor):
     """Military [Workers] cost 2 [Stone] less to deploy (at least 1 [Stone])"""

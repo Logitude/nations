@@ -545,7 +545,18 @@ class Player:
                 self.match.events.happen('make extra payment', self, card=card)
         else:
             buy_with = self.match.events.happen('buy with', self, card=card)
-            price = self.match.events.happen('buy from player', self, card=card)[0]
+            cards_prices = self.match.events.happen('card price', self, card=card)
+            if len(cards_prices) == 1:
+                (activated_card, price) = cards_prices[0]
+            else:
+                buy_options = [effect_card for (effect_card, effect_price) in cards_prices]
+                choice = self.match.get_move(self, f'Activate which effect to buy "{card}"?', buy_options)
+                for (effect_card, effect_price) in cards_prices:
+                    if choice is effect_card:
+                        activated_card = effect_card
+                        price = effect_price
+                        break
+            self.match.events.happen('pay for card', self, card=card, activated=activated_card, price=price)
             if buy_with:
                 buy_with = buy_with[0]
             else:

@@ -632,7 +632,8 @@ class PolishLithuanianCommonwealth(DynastyCard):
         self.register_for_event('advisors on wonder spaces', self.owned, self.true)
         self.register_for_event('when removed', self.is_self, self.remove_advisors_on_wonder_spaces)
         self.register_for_event('additional buys', self.other_player, self.wonderful_advisor_buys)
-        self.register_for_event('buy from player', self.is_wonderful_advisor, self.buy_wonderful_advisor)
+        self.register_for_event('card price', self.is_wonderful_advisor, self.wonderful_advisor_price)
+        self.register_for_event('pay for card', self.activated_self, self.buy_wonderful_advisor)
 
     def is_self(self, player, **kwargs):
         return player is self.owner and kwargs['card'] is self
@@ -657,13 +658,18 @@ class PolishLithuanianCommonwealth(DynastyCard):
     def is_wonderful_advisor(self, player, **kwargs):
         return kwargs['card'] in self.wonderful_advisors()
 
+    def wonderful_advisor_price(self, player, **kwargs):
+        return (self, 3)
+
+    def activated_self(self, player, **kwargs):
+        return kwargs['activated'] is self
+
     def buy_wonderful_advisor(self, player, **kwargs):
         card = kwargs['card']
         self.match.log(f'{player} pays 3 [Gold] to {self.owner} to buy "{card}".')
         player.resources[Resource.GOLD] -= 3
         self.owner.resources[Resource.GOLD] += 3
         self.owner.remove(card)
-        return 3
 
 class KingdomOfLeon(DynastyCard):
     """Buy War: Also gain the effects of having bought a Battle"""
