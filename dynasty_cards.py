@@ -130,7 +130,7 @@ class QinDynasty(DynastyCard):
     abbr = 'C_QD'
 
     def action_available(self, player):
-        return player is self.owner and self.markers < 3 and player.grown_workers and player.incomplete_wonder_stages()
+        return player is self.owner and self.markers < 3 and player.grown_workers and player.can_hire_architect()
 
     def activate(self, player):
         self.markers += 1

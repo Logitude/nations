@@ -160,6 +160,10 @@ class Player:
     def replaceable_wonder_spaces(self):
         return len([space for space in self.wonders if space is None or not space.is_natural_wonder_or_extension()])
 
+    def can_hire_architect(self):
+        stages_remaining = self.incomplete_wonder_stages()
+        return stages_remaining > 1 or (stages_remaining == 1 and self.replaceable_wonder_spaces())
+
     def assign_nation(self, nation):
         self.nation = nation
         self.dynasties = nation.dynasties[:]

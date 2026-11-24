@@ -1062,7 +1062,7 @@ class MagellansExpeditionPapalIndulgence(Age3EventCard):
     def happen_b(self):
         most_stability = self.most_stability()
         for player in most_stability:
-            if player.incomplete_wonder_stages():
+            if player.can_hire_architect():
                 answer = self.match.get_move(player, 'Hire 1 [Architect] for free?', ('Yes', 'No'))
                 if answer == 'Yes':
                     card = player.wonders_under_construction[0]
@@ -1071,6 +1071,8 @@ class MagellansExpeditionPapalIndulgence(Age3EventCard):
                 else:
                     self.match.log(f'{player} declines.')
                 self.match.get_move(player, 'Confirm?', ('Confirm',))
+            elif player.incomplete_wonder_stages():
+                self.match.log(f'{player} has no replaceable wonder spaces remaining.')
             else:
                 self.match.log(f'{player} has no wonders under construction.')
         for player in self.match.players[::-1]:
@@ -1248,7 +1250,7 @@ class AnarchismGreatExhibition(Age4EventCard):
         for player in self.most_stability():
             self.match.log(f'{player} may hire up to 2 [Architects] for free.')
             for i in range(2):
-                if player.incomplete_wonder_stages():
+                if player.can_hire_architect():
                     answer = self.match.get_move(player, 'Hire [Architect] for free?', ('Yes', 'No'))
                     if answer == 'Yes':
                         card = player.wonders_under_construction[0]
@@ -1260,7 +1262,10 @@ class AnarchismGreatExhibition(Age4EventCard):
                     if answer == 'No':
                         break
                 else:
-                    self.match.log(f'{player} has no wonders under construction.')
+                    if player.incomplete_wonder_stages():
+                        self.match.log(f'{player} has no replaceable wonder spaces remaining.')
+                    else:
+                        self.match.log(f'{player} has no wonders under construction.')
                     break
 
 class CalifornianGoldRushIrishPotatoBlight(Age4EventCard):

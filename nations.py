@@ -593,14 +593,17 @@ class KoreaSpecial(Special):
         architects = 1 if self.match.korea_nerf else 2
         self.match.log(f'[{self}] {player} may hire up to {architects} [Architect{s_if_not_1(architects)}] for free.')
         for i in range(architects):
-            if player.incomplete_wonder_stages():
+            if player.can_hire_architect():
                 answer = self.match.get_move(player, 'Hire [Architect] for free?', ('Yes', 'No'))
                 if answer == 'Yes':
                     card = player.wonders_under_construction[0]
                     self.match.log(f'[{self}] {player} hires a free architect for "{card}".')
                     player.hire_free_architect(card)
             else:
-                self.match.log(f'[{self}] {player} has no wonders under construction.')
+                if player.incomplete_wonder_stages():
+                    self.match.log(f'[{self}] {player} has no replaceable wonder spaces remaining.')
+                else:
+                    self.match.log(f'[{self}] {player} has no wonders under construction.')
                 break
 
 class Korea(Nation):
