@@ -543,6 +543,7 @@ class Player:
                 self.resources[Resource.GOLD] -= price
             if extra_payment:
                 self.match.events.happen('make extra payment', self, card=card)
+            price += extra_payment
         else:
             buy_with = self.match.events.happen('buy with', self, card=card)
             cards_prices = self.match.events.happen('card price', self, card=card)
