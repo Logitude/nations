@@ -143,14 +143,17 @@ class AssyrianDeportationsJainAscetism(Age1EventCard):
 
     def reset(self):
         super().reset()
-        self.points_lost_to_war = collections.Counter()
+        self.points_lost_to_war = {}
 
     def reveal(self):
         self.register_for_event('lost to war', self.true, self.lost_points_to_war)
 
     def lost_points_to_war(self, player, **kwargs):
         if 'points' in kwargs:
-            self.points_lost_to_war[player.name] += kwargs['points']
+            try:
+                self.points_lost_to_war[player.name] += kwargs['points']
+            except KeyError:
+                self.points_lost_to_war[player.name] = Resources(kwargs['points'])
 
     def happen_a(self):
         for player in self.match.least_military():
@@ -163,9 +166,11 @@ class AssyrianDeportationsJainAscetism(Age1EventCard):
     def happen_b(self):
         for player in self.most_stability():
             if player.name in self.points_lost_to_war:
-                points = self.points_lost_to_war[player.name]
+                points = self.points_lost_to_war[player.name].total()
                 self.match.log(f'{player} regains the {points} [Point{s_if_not_1(points)}] lost to war.')
                 player.points += points
+                for resource_type in self.points_lost_to_war[player.name]:
+                    player.resource_deficit_points[resource_type] = 0
             else:
                 self.match.log(f'{player} did not lose any points to war.')
 
@@ -570,7 +575,7 @@ class FourthCrusadeSongResistance(Age2EventCard):
 
     def reset(self):
         super().reset()
-        self.points_lost_to_war = collections.Counter()
+        self.points_lost_to_war = {}
         self.resources_lost_to_war = {}
 
     def reveal(self):
@@ -578,7 +583,10 @@ class FourthCrusadeSongResistance(Age2EventCard):
 
     def lost_to_war(self, player, **kwargs):
         if 'points' in kwargs:
-            self.points_lost_to_war[player.name] += kwargs['points']
+            try:
+                self.points_lost_to_war[player.name] += kwargs['points']
+            except KeyError:
+                self.points_lost_to_war[player.name] = Resources(kwargs['points'])
         if 'resources' in kwargs:
             try:
                 self.resources_lost_to_war[player.name] += kwargs['resources']
@@ -642,7 +650,7 @@ class FourthCrusadeSongResistance(Age2EventCard):
                 resources = Resources()
                 gain = ''
                 if player.name in self.points_lost_to_war:
-                    points = self.points_lost_to_war[player.name]
+                    points = self.points_lost_to_war[player.name].total()
                     gain += f'{points} [Point{s_if_not_1(points)}]'
                 if player.name in self.resources_lost_to_war:
                     resources += self.resources_lost_to_war[player.name]
@@ -652,6 +660,9 @@ class FourthCrusadeSongResistance(Age2EventCard):
                 self.match.log(f'{player} regains the {gain} lost to war.')
                 player.points += points
                 player.resources += resources
+                if points:
+                    for resource_type in self.points_lost_to_war[player.name]:
+                        player.resource_deficit_points[resource_type] = 0
             else:
                 self.match.log(f'{player} did not lose any points or resources to war.')
 

@@ -974,7 +974,7 @@ class Player:
                     self.match.log(f'{self} loses 1 [Point] for negative {resource_type}.')
                     self.points -= 1
                     if lost_to_war:
-                        self.match.events.happen('lost to war', self, points=1)
+                        self.match.events.happen('lost to war', self, points=Resources({resource_type: 1}))
                     self.resource_deficit_points[resource_type] = -1
                 elif self.resource_deficit_points[resource_type]:
                     self.match.log(f'{self} already lost a [Point] for negative {resource_type}.')
@@ -997,7 +997,7 @@ class Player:
                     self.match.log(f'{self} loses 1 [Point] for negative [Books].')
                     self.points -= 1
                     if lost_to_war:
-                        self.match.events.happen('lost to war', self, points=1)
+                        self.match.events.happen('lost to war', self, points=Resources({Resource.BOOKS: 1}))
                     self.resource_deficit_points[Resource.BOOKS] = -1
                 elif self.resource_deficit_points[Resource.BOOKS]:
                     if not mentioned_negative_books:
@@ -1085,7 +1085,7 @@ class Player:
                     if self.points > 0:
                         self.match.log(f'{self} loses 1 [Point] for being defeated in the "{self.match.war}".')
                         self.points -= 1
-                        self.match.events.happen('lost to war', self, points=1)
+                        self.match.events.happen('lost to war', self, points=Resources({Resource.MILITARY: 1}))
                     else:
                         self.match.log(f'{self} is spared the [Point] loss from being defeated in the "{self.match.war}".')
                 resource_loss_amount = penalty.total()
