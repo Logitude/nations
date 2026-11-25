@@ -786,7 +786,10 @@ class Player:
             possible_actions.append(PassAction())
             if len(self.match.players) == 2:
                 possible_actions.append(ResignAction())
-            action = self.match.get_move(self, 'Which action?', possible_actions)
+            multiple_remaining = ''
+            if self.remaining_main_actions > 1:
+                multiple_remaining = f' ({self.remaining_main_actions} remaining)'
+            action = self.match.get_move(self, f'Which action?{multiple_remaining}', possible_actions)
         self.take_action(action)
         if action.action_type is ActionType.PASS:
             self.remaining_main_actions = 0
