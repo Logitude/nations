@@ -204,7 +204,7 @@ class AxumiteKingdom(DynastyCard):
 
     def reset(self):
         super().reset()
-        self.marked_cards = []
+        self.marked_cards = {}
 
     def play(self):
         self.register_for_event('after event reveal', self.owned, self.mark_card)
@@ -216,11 +216,14 @@ class AxumiteKingdom(DynastyCard):
         possible_marks = {}
         for (row, cards_in_row) in enumerate(self.match.progress_board):
             for (col, card) in enumerate(cards_in_row):
-                if card is not None and card not in self.marked_cards:
+                if card is not None:
                     possible_marks[f'P{row + 1}{col + 1}'] = card
         choice = self.match.get_move(player, 'Mark which progress card?', tuple(possible_marks.keys()))
         card = possible_marks[choice]
-        self.marked_cards.append(card)
+        try:
+            self.marked_cards[card] += 1
+        except KeyError:
+            self.marked_cards[card] = 1
         self.match.log(f'[{self}] {player} marks "{card}".')
         self.match.get_move(player, 'Confirm?', ('Confirm',))
 
@@ -228,24 +231,25 @@ class AxumiteKingdom(DynastyCard):
         return player is not self.owner and kwargs['card'] in self.marked_cards
 
     def extra_payment(self, player, **kwargs):
-        return 3
+        return 3 * self.marked_cards[kwargs['card']]
 
     def pay_owner(self, player, **kwargs):
         card = kwargs['card']
-        self.match.log(f'[{self}] {player} pays {self.owner} 3 [Gold] for buying "{card}".')
-        player.resources[Resource.GOLD] -= 3
-        self.owner.resources[Resource.GOLD] += 3
+        extra_cost = 3 * self.marked_cards[card]
+        self.match.log(f'[{self}] {player} pays {self.owner} {extra_cost} [Gold] for buying "{card}".')
+        player.resources[Resource.GOLD] -= extra_cost
+        self.owner.resources[Resource.GOLD] += extra_cost
 
     def is_marked_card(self, player, **kwargs):
         return kwargs['card'] in self.marked_cards
 
     def unmark_card(self, player, **kwargs):
-        self.marked_cards.remove(kwargs['card'])
+        del self.marked_cards[kwargs['card']]
 
     def state(self):
         s = super().state()
         if self.marked_cards:
-            s['marked'] = [card.abbr for card in self.marked_cards]
+            s['marked'] = {card.abbr: number for (card, number) in self.marked_cards.items()}
         return s
 
 class Sheba(DynastyCard):
