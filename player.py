@@ -924,7 +924,10 @@ class Player:
         self.remove_cards([card])
 
     def remove_all_advisors(self):
-        self.remove_cards(self.removable_advisor_cards())
+        advisor_cards_to_remove = self.removable_advisor_cards()
+        for card in advisor_cards_to_remove:
+            self.match.log(f'{self} removes "{card}".')
+        self.remove_cards(advisor_cards_to_remove)
 
     def losing_resources_needs_choice(self, resources_to_lose):
         resources_after_loss = self.resources.production()
